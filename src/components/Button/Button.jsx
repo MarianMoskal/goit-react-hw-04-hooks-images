@@ -2,9 +2,9 @@ import React from "react";
 import PropTypes from "prop-types";
 import { LoadButton } from "./Button.styled";
 
-function Button(p) {
+function Button({ onClick }) {
   return (
-    <LoadButton type="button" onClick={p.onClick}>
+    <LoadButton type="button" onClick={onClick}>
       Load more
     </LoadButton>
   );

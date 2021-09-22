@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import PropTypes from "prop-types";
 import { Header, SearchForm, Button, Label, Input } from "./Searchbar.styled";
 
-function Searchbar({ onChange, onSubmit }) {
+function Searchbar({ onSubmit }) {
   return (
     <Fragment>
       <Header>
@@ -15,7 +15,6 @@ function Searchbar({ onChange, onSubmit }) {
             className="SearchForm-input"
             id="textInput"
             type="text"
-            onChange={onChange}
             autoComplete="off"
             autoFocus
             placeholder="Search images and photos"
@@ -28,7 +27,6 @@ function Searchbar({ onChange, onSubmit }) {
 
 Searchbar.propTypes = {
   onSubmit: PropTypes.func.isRequired,
-  onChange: PropTypes.func.isRequired,
 };
 
 export default Searchbar;

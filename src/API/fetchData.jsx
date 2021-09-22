@@ -11,9 +11,7 @@ axios.defaults.params = {
   orientation: "horizontal",
 };
 
-const fetchData = async (state) => {
-  const { query, page } = state;
-
+const fetchData = async (query, page) => {
   return await axios("", {
     params: { q: query, page },
   });

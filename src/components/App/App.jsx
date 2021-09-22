@@ -1,132 +1,127 @@
-import { Component } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Searchbar from "../../components/Searchbar/Searchbar";
 import ImageGallery from "../../components/ImageGallery/ImageGallery";
 import Button from "../../components/Button/Button";
 import fetchData from "../../API/fetchData";
 import Modal from "../Modal/Modal";
+import { debounce } from "debounce";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Container } from "./App.styled";
 
-class App extends Component {
-  state = {
-    data: {},
-    hits: [],
-    query: "",
-    page: 1,
-    selectedImage: null,
-    loaderVisible: false,
+function App() {
+  const [page, setPage] = useState(1);
+  const [hits, setHits] = useState([]);
+  const [query, setQuery] = useState("");
+  const [totalHits, setTotalHits] = useState(0);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [loaderVisible, setLoaderVisible] = useState(false);
+
+  const toggleLoaderVisible = () => {
+    setLoaderVisible((prevLoaderVisible) => !prevLoaderVisible);
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const { page, data, hits, selectedImage, query } = this.state;
-    const ruleForScrollTo =
-      page !== prevState.page || selectedImage !== prevState.selectedImage;
-    const ruleForNotify =
-      hits.length === data.totalHits &&
-      selectedImage === null &&
-      query === prevState.query;
+  const handleScroll = useCallback(
+    (e) => {
+      const node = e.target.scrollingElement;
+      const bottom = node.scrollHeight - node.scrollTop === node.clientHeight;
+      const ruleForNotify =
+        bottom && hits.length === totalHits && hits.length !== 0;
 
-    if (ruleForScrollTo) {
-      console.log(`wow  ${this.state.selectedImage}`);
-      window.scrollTo({
-        top: document.documentElement.scrollHeight,
-        behavior: "smooth",
-      });
+      if (ruleForNotify) {
+        return notify();
+      }
+    },
+    [hits, totalHits]
+  );
+
+  useEffect(() => {
+    window.addEventListener("scroll", debounce(handleScroll, 300));
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [handleScroll]);
+
+  useEffect(() => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [page, selectedImage]);
+
+  useEffect(() => {
+    if (query.trim() !== "") {
+      try {
+        setTimeout(() => {
+          fetchData(query, page).then(({ data }) => {
+            const ruleForNotify =
+              data.hits.length !== 0 && data.hits.length === data.totalHits;
+
+            setTotalHits(data.totalHits);
+            setHits((prevHits) => [...prevHits, ...data.hits]);
+            if (ruleForNotify) {
+              notify();
+            }
+          });
+          toggleLoaderVisible();
+        }, 1000);
+      } catch (error) {
+        console.log(error);
+        alert(error);
+      }
     }
+  }, [page, query]);
 
-    if (ruleForNotify) {
-      setTimeout(this.notify, 3000);
-    }
-  }
-
-  handleInput = (e) => {
-    this.setState({ query: e.target.value });
-  };
-
-  onSubmit = (e) => {
+  const onSubmit = (e) => {
     e.preventDefault();
 
-    this.toggleLoaderVisible();
+    toggleLoaderVisible();
+
+    setPage(1);
+    setHits([]);
+    setQuery(e.target.textInput.value);
+
     e.target.textInput.value = "";
-
-    this.setState({ page: 1, hits: [] }, () => {
-      this.handleFetchResponse();
-    });
   };
 
-  loadMore = (e) => {
-    this.toggleLoaderVisible();
-    setTimeout(
-      this.setState({ page: this.state.page + 1 }, () => {
-        this.handleFetchResponse();
-      }),
-      2000
-    );
+  const loadMore = (e) => {
+    toggleLoaderVisible();
+    setPage(page + 1);
   };
 
-  handleFetchResponse = () => {
-    try {
-      fetchData(this.state).then(({ data }) => {
-        // console.log(data);
-        this.setState((state) => ({
-          data,
-          hits: [...state.hits, ...data.hits],
-        }));
-        this.toggleLoaderVisible();
-      });
-    } catch (error) {
-      console.log(error);
-      alert(error);
-    }
+  const handleSelectedImage = (src, alt) => {
+    setSelectedImage({ src, alt });
   };
 
-  handleSelectedImage = (src, alt) => {
-    this.setState({ selectedImage: { src, alt } });
+  const handleCloseModal = () => {
+    setSelectedImage(null);
   };
 
-  toggleLoaderVisible = () => {
-    this.setState({ loaderVisible: !this.state.loaderVisible });
-  };
-
-  handleCloseModal = () => {
-    this.setState(
-      { selectedImage: null },
-      console.log(`close me, ${this.state.selectedImage}`)
-    );
-  };
-
-  notify = () => {
+  const notify = () => {
     toast.warn("There are no more images that fit to your query", {
       theme: "colored",
     });
   };
 
-  render() {
-    // console.log(`shit, ${this.state.selectedImage}`);
-    const { hits, loaderVisible, selectedImage, data } = this.state;
-    const rule =
-      hits.length > 11 && !loaderVisible && hits.length < data.totalHits;
+  const rule = hits.length > 11 && !loaderVisible && hits.length < totalHits;
 
-    return (
-      <Container>
-        <ToastContainer position="bottom-center" autoClose="off" />
-        <Searchbar onSubmit={this.onSubmit} onChange={this.handleInput} />
-        <ImageGallery
-          hits={hits}
-          visible={loaderVisible}
-          onSelect={this.handleSelectedImage}
-        />
-        {rule && <Button onClick={this.loadMore} />}
-        {selectedImage && (
-          <Modal
-            selectedImage={selectedImage}
-            closeModal={this.handleCloseModal}
-          />
-        )}
-      </Container>
-    );
-  }
+  return (
+    <Container>
+      <ToastContainer position="top-center" autoClose="off" limit={1} />
+      <ToastContainer position="bottom-center" autoClose="off" limit={1} />
+      <Searchbar onSubmit={onSubmit} />
+      <ImageGallery
+        hits={hits}
+        visible={loaderVisible}
+        onSelect={handleSelectedImage}
+        onScroll={handleScroll}
+      />
+      {rule && <Button onClick={loadMore} />}
+      {selectedImage && (
+        <Modal selectedImage={selectedImage} closeModal={handleCloseModal} />
+      )}
+    </Container>
+  );
 }
 
 export default App;

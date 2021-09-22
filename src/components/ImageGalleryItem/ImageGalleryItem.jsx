@@ -2,9 +2,7 @@ import React, { Fragment } from "react";
 import PropTypes from "prop-types";
 import { Image, Item } from "./ImageGalleryItem.styled";
 
-function ImageGalleryItem(p) {
-  const { alt, onClick, largeImageURL } = p;
-
+function ImageGalleryItem({ alt, onClick, largeImageURL }) {
   return (
     <Fragment>
       <Item>

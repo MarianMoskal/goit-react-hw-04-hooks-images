@@ -1,19 +1,18 @@
-import React from "react";
+// import React from "react";
 import PropTypes from "prop-types";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import Loader from "react-loader-spinner";
 import ImageGalleryItem from "../ImageGalleryItem/ImageGalleryItem";
 import { Gallery, Spinner } from "./ImageGallery.styled";
 
-function ImageGallery(p) {
-  const { hits, visible, onSelect } = p;
-
+function ImageGallery({ hits, visible, onSelect, onScroll }) {
   return (
     <>
       <Gallery>
         {hits.map(({ webformatURL, tags, largeImageURL, id }) => (
           <ImageGalleryItem
             onClick={onSelect}
+            onScroll={onScroll}
             key={`${id}+${webformatURL}`}
             largeImageURL={largeImageURL}
             src={webformatURL}
@@ -30,7 +29,7 @@ function ImageGallery(p) {
             color="Orange"
             height={100}
             width={100}
-            timeout={7000}
+            timeout={3000}
           />
         </Spinner>
       )}
