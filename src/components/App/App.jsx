@@ -47,7 +47,7 @@ function App() {
       top: document.documentElement.scrollHeight,
       behavior: "smooth",
     });
-  }, [page, selectedImage]);
+  }, [hits, selectedImage]);
 
   useEffect(() => {
     if (query.trim() !== "") {
