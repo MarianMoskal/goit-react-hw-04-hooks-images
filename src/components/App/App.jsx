@@ -32,7 +32,7 @@ function App() {
         return notify();
       }
     },
-    [hits, totalHits]
+    [hits.length, totalHits]
   );
 
   useEffect(() => {
@@ -47,7 +47,7 @@ function App() {
       top: document.documentElement.scrollHeight,
       behavior: "smooth",
     });
-  }, [hits, selectedImage]);
+  }, [hits.length, selectedImage]);
 
   useEffect(() => {
     if (query.trim() !== "") {
